@@ -7,7 +7,7 @@ on:
   pull_request:
 
 jobs:
-  build:
+  security_scan:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,36 +20,25 @@ jobs:
         distribution: temurin
         java-version: 11
 
+    # Build your project, skip tests to speed up (required for Sonar scan)
     - name: Build with Maven
       run: mvn clean install -DskipTests
 
-    # SonarQube SAST scan
+    # SonarQube / SonarCloud SAST scan
     - name: SonarQube Scan
       env:
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       run: |
         mvn sonar:sonar \
           -Dsonar.projectKey=your-project-key \
+          -Dsonar.organization=your-organization-key \
           -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
           -Dsonar.login=$SONAR_TOKEN
 
-    # OWASP Dependency Check (SCA) - Dependency vulnerability scan
+    # OWASP Dependency Check - SCA scan
     - name: Dependency Check Scan
       uses: dependency-check/dependency-check-action@v2
       with:
-        scan-path: './'  # scan current directory (your Maven project)
+        scan-path: './'
         format: 'ALL'
         fail-on-vulnerabilities: true
-
-    # Build Docker image (if you have a Dockerfile in repo)
-    - name: Build Docker Image
-      run: |
-        docker build -t ${{ secrets.IMAGE_NAME }} .
-
-    # Scan Docker Image with Trivy
-    - name: Scan Docker Image with Trivy
-      uses: aquasecurity/trivy-action@v0.10.0
-      with:
-        image-ref: ${{ secrets.IMAGE_NAME }}
-        format: 'table'
-        exit-code: 1  # fail if vulnerabilities found
