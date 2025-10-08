@@ -37,7 +37,7 @@ jobs:
 
     # OWASP Dependency Check - SCA scan
     - name: Dependency Check Scan
-      uses: dependency-check/dependency-check-action@v2
+      uses: jeremylong/dependency-check-action@v2
       with:
         scan-path: './'
         format: 'ALL'
